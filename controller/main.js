@@ -1,9 +1,8 @@
 const https = require("https");
 const RepoData = require("../models/RepoData");
-let arr = [];
 exports.fetch_data = (req, res) => {
   https.get(
-    `https://api.github.com/search/repositories?q=created:%3E2021-11-01&sort=stars&order=desc&page=1&per_page=100&page_limit=1`,
+    `https://api.github.com/search/repositories?q=created:>${req.params.date}&sort=stars&order=desc&page=1&per_page=100&page_limit=1`,
     {
       headers: {
         "User-Agent": "Amoud94",
@@ -30,7 +29,6 @@ exports.fetch_data = (req, res) => {
               el.description
             );
           });
-          arr = temp;
           const count = {};
           for (const element of temp) {
             if (element.language !== null) {
@@ -55,9 +53,8 @@ exports.fetch_data = (req, res) => {
 };
 
 exports.listRepos = (req, res) => {
-  const lng = req.params.lng_name;
   https.get(
-    `https://api.github.com/search/repositories?q=created:%3E2021-11-01&sort=stars&order=desc&page=1&per_page=100&page_limit=1`,
+    `https://api.github.com/search/repositories?q=created:%3E${req.params.date}&sort=stars&order=desc&page=1&per_page=100&page_limit=1`,
     {
       headers: {
         "User-Agent": "Amoud94",
@@ -67,7 +64,6 @@ exports.listRepos = (req, res) => {
     (result) => {
       try {
         let data = [];
-        console.log(result.statusCode)
         if (result.statusCode !== 200) {
           throw Error("Cannot reach this server right now, an error occured");
         }
@@ -85,13 +81,16 @@ exports.listRepos = (req, res) => {
               el.description
             );
           });
-          console.log(temp)
-          const repoList = temp.filter((el) => {
-            if (el.language === lng) {
-              return el;
-            }
-          });
-          console.log(repoList);
+          let repoList;
+          if (req.params.lng === "null") {
+            repoList = temp;
+          } else {
+            repoList = temp.filter((el) => {
+              if (el.language === req.params.lng) {
+                return el;
+              }
+            });
+          }
           res.json({
             message: "Success",
             ReturnedData: repoList,
